@@ -14,7 +14,7 @@ band. Games leave by a per-hour hazard by band, or at created+28d when the
 creation date is known. New games join near the bottom (~0.55/hour) with
 drift from a mixture (rockets / climbers / faders). Pool games may "ignite"
 and climb fast for 12-36h. After 1000 simulated paths x 72 hours, the
-frequency of each (game, place) is its probability. Games below 0.003 are
+frequency of each (game, place) is its probability. Games below 0.007 are
 left unnamed; the leftover (new games + sub-threshold games) is the unnamed
 share, exactly as the scorer spreads it.
 
@@ -31,7 +31,7 @@ Why this shape (measured on the archive, 2026-10-30..2026-11-10):
 - Player counts do not predict rank moves (corr -0.02), so they are not used.
 
 Practice backtest (train on the 34 archive reads to 2026-11-07T23:00Z,
-score on the 10 archive reads in the window): log score -32.51, vs the
+score on the 10 archive reads in the window): log score -32.46, vs the
 house persistence baseline -43.51, the house model -37.2, and the best
 practice entry so far -34.8. Walk-forward checks on two earlier cutoffs
 also beat the baseline by +10.7 and +6.7.
@@ -47,7 +47,7 @@ from datetime import datetime, timedelta
 SEED = 20261113
 HOURS = 72
 N_PATHS = 1000
-NAME_MIN = 0.003
+NAME_MIN = 0.007
 VOL = 1.3
 DRIFT_SHRINK = 0.5
 DRIFT_DECAY = 0.99          # per-hour retention of (drift - group mean)
@@ -72,10 +72,6 @@ def _band(rank):
     if rank <= 30:
         return 2
     return 3
-
-
-def _band_of(x):
-    return _band(x)
 
 
 def build_states(reads):
@@ -156,7 +152,7 @@ def simulate(states, last_t, places):
             for i in range(len(xs)):
                 if not alive[i]:
                     continue
-                if rng.random() < BAND_HAZARD[_band_of(xs[i])]:
+                if rng.random() < BAND_HAZARD[_band(xs[i])]:
                     alive[i] = False
                     continue
                 if created[i] is not None and now >= created[i] + timedelta(days=28):
